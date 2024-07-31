@@ -39,7 +39,7 @@ public class AutoFillAspect {
      * 前置通知, 在通知中进行公共字段的赋值
      */
     @Before("autoFillPointCut()")
-    public void autoFill(JoinPoint joinPoint) {
+    public void autoFill(JoinPoint joinPoint) throws Throwable {
         log.info("开始进行公共字段自动填充...");
 
         // 获取到当前被拦截的方法上的数据库操作类型
@@ -62,7 +62,7 @@ public class AutoFillAspect {
         if (operationType == OperationType.INSERT) {
             try {
                 Method setCreateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_USER, Long.class);
-                Method setCreateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_USER, LocalDateTime.class);
+                Method setCreateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_CREATE_TIME, LocalDateTime.class);
                 Method setUpdateTime = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_TIME, LocalDateTime.class);
                 Method setUpdateUser = entity.getClass().getDeclaredMethod(AutoFillConstant.SET_UPDATE_USER, Long.class);
 
@@ -72,6 +72,7 @@ public class AutoFillAspect {
                 setUpdateUser.invoke(entity, id);
             } catch (Exception e) {
                 e.printStackTrace();
+                throw e;
             }
         } else if (operationType == OperationType.UPDATE) {
             try {
@@ -82,6 +83,7 @@ public class AutoFillAspect {
                 setUpdateUser.invoke(entity, id);
             } catch (Exception e) {
                 e.printStackTrace();
+                throw e;
             }
         }
 
