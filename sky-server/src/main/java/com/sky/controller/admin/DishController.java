@@ -68,4 +68,12 @@ public class DishController {
         return Result.success();
     }
 
+    @GetMapping("/list")
+    @ApiOperation("根据分类id获取菜品和口味list")
+    public Result<List<DishVO>> list(@RequestParam Long categoryId){
+        log.info("根据分类id获取菜品和口味list, 分类id: {}", categoryId);
+        List<DishVO> dishVOS = dishService.getByCategoryIdWithFlavor(categoryId);
+        return Result.success(dishVOS);
+    }
+
 }
