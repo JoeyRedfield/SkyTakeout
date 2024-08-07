@@ -21,4 +21,7 @@ public interface OrderMapper {
 
     @Select("select * from orders where id = #{id}")
     OrderVO getById(Long id);
+
+    @Select("select count(id) from orders where status = #{status}")
+    Integer countByOrderStatus(Integer status);
 }
