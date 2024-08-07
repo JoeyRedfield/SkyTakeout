@@ -1,8 +1,11 @@
 package com.sky.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.Page;
+import com.github.pagehelper.PageHelper;
 import com.sky.constant.MessageConstant;
 import com.sky.context.BaseContext;
+import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
 import com.sky.entity.*;
@@ -10,10 +13,13 @@ import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
+import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
+import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,6 +136,49 @@ public class OrderServiceImpl implements OrderService {
         vo.setPackageStr(jsonObject.getString("package"));
 
         return vo;
+    }
+
+    @Override
+    public PageResult pageQuery(OrdersPageQueryDTO ordersPageQueryDTO) {
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        // OrderVO继承了Order, 有相关属性, 直接用
+        Long userId = BaseContext.getCurrentId();
+        ordersPageQueryDTO.setUserId(userId);
+        Page<OrderVO> voPage = orderMapper.pageQuery(ordersPageQueryDTO);
+        List<OrderVO> orderVOList = voPage.getResult();
+        for (OrderVO order : orderVOList) {
+            List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(order.getId());
+            order.setOrderDetailList(orderDetailList);
+        }
+        return new PageResult(voPage.getTotal(), orderVOList);
+    }
+
+    @Override
+    public void cancelOrder(Long id) {
+        Orders orders = new Orders();
+        orders.setId(id);
+        orders.setStatus(Orders.CANCELLED);
+        orderMapper.update(orders);
+    }
+
+    @Override
+    public OrderVO getOrderDetailById(Long id) {
+        OrderVO order = orderMapper.getById(id);
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+        order.setOrderDetailList(orderDetailList);
+        return order;
+    }
+
+    @Override
+    public void repetition(Long id) {
+        OrderVO byId = orderMapper.getById(id);
+        Orders orders = new Orders();
+        BeanUtils.copyProperties(byId, orders);
+        orders.setPayStatus(Orders.UN_PAID);
+        orders.setStatus(Orders.PENDING_PAYMENT);
+        orders.setOrderTime(LocalDateTime.now());
+
+        orderMapper.insert(orders);
     }
 
     /**

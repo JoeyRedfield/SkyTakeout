@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -87,5 +88,39 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     public void cleanShoppingCart() {
         Long userId = BaseContext.getCurrentId();
         shoppingCartMapper.deleteByUserId(userId);
+    }
+
+    @Override
+    public void updateShoppingCart(ShoppingCartDTO shoppingCartDTO) {
+        ShoppingCart shoppingCart = new ShoppingCart();
+        BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
+
+        // 这个List要么只有dish_id和flavor, 要么只有setmeal_id
+        List<ShoppingCart> shoppingCartList = shoppingCartMapper.list(shoppingCart);
+        // 先拿到这次要操作的对象
+        Long setmealId = shoppingCartDTO.getSetmealId();
+        Long dishId = shoppingCartDTO.getDishId();
+        if(dishId != null){
+            // 找到list中对应的dishId
+            for (ShoppingCart cart : shoppingCartList) {
+                if(Objects.equals(cart.getDishId(), dishId)){
+                    shoppingCart = cart;
+                }
+            }
+        } else if(setmealId != null){
+            // 找到list中对应的setmeatId
+            for (ShoppingCart cart : shoppingCartList) {
+                if(Objects.equals(cart.getSetmealId(), setmealId)){
+                    shoppingCart = cart;
+                }
+            }
+        }
+        int number = shoppingCart.getNumber() - 1;
+        shoppingCart.setNumber(number);
+        if(number <= 0){
+            shoppingCartMapper.deleteById(shoppingCart.getId());
+        }else{
+            shoppingCartMapper.updateNumberById(shoppingCart);
+        }
     }
 }
