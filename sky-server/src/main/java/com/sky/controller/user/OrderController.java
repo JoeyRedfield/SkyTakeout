@@ -73,7 +73,7 @@ public class OrderController {
         return Result.success(orderVO);
     }
 
-    @PostMapping("/user/order/repetition/{id}")
+    @PostMapping("/repetition/{id}")
     @ApiOperation("再来一单")
     public Result repetition(@PathVariable Long id){
         orderService.repetition(id);
