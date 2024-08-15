@@ -12,6 +12,7 @@ import org.apache.ibatis.annotations.Select;
 import org.springframework.web.bind.annotation.DeleteMapping;
 
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface DishMapper {
@@ -49,4 +50,6 @@ public interface DishMapper {
 
 
     List<Dish> list(Dish dish);
+
+    Integer countByMap(Map map);
 }
